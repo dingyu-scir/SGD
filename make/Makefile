@@ -1,4 +1,4 @@
-SOURCE=../src/test.cpp
+SOURCE=../src/test.cpp ../src/SgdLogReg.cpp
 INCLUDES=../include/
 CC=g++
 CXXFLAGS= -Wall -g -pipe -O2 -fPIC

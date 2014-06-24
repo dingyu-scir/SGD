@@ -5,7 +5,9 @@
 namespace shishu {
 namespace sgd {
 
-static const int MAX_INPUT_LENGTH = 1024;
+const int MAX_INPUT_LENGTH = 1024;
+const char SEG_TOKEN[] = " ";
+const char SEG_COLON = ':';
 
 };
 };
