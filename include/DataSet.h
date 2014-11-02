@@ -51,6 +51,20 @@ public:
         return _data_list[idx];
     }
 
+    TrainData* get_idx_data(uint32_t idx)
+    {
+        if (idx < _cur_data_id) {
+            return _data_list[idx];
+        }
+        
+        return NULL;
+    }
+
+    uint32_t length()
+    {
+        return _cur_data_id;
+    }
+
 private:
     DataSet()
     {

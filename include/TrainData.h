@@ -44,6 +44,11 @@ public:
         _label = (1 + label) / 2;
     }
 
+    int label()
+    {
+        return _label;
+    }
+
 private:
     TrainData()
     {

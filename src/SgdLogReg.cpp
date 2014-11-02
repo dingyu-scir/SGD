@@ -9,10 +9,13 @@ int SgdLogReg::load_conf(char* conf_file)
 {
     _fea_num = 125;
     _record_num = 25000;
+    _test_num = 7500;
     _sample_path = "./train_data";
+    _test_path = "./validate_data";
     _output_path = "./sgd_model";
     _converge_rate = 0.0001;
-    _ds = new DataSet(_record_num);
+    _train_ds = new DataSet(_record_num);
+    _test_ds = new DataSet(_test_num);
     _iter_num = 10000;
     _wv = new double[_fea_num];
     for (uint32_t i = 0; i < _fea_num; i++) {
@@ -21,18 +24,43 @@ int SgdLogReg::load_conf(char* conf_file)
     return 0;
 }
 
-int SgdLogReg::load_data()
+int SgdLogReg::load_train_data()
 {
-    FILE* file = fopen(_sample_path, "r");
+    return load_data(_sample_path, _train_ds);
+}
+
+int SgdLogReg::load_test_data()
+{
+    return load_data(_test_path, _test_ds);
+}
+
+int SgdLogReg::predict_test_data()
+{
+    return predict_ds(_test_ds, _wv);
+}
+
+int SgdLogReg::predict_ds(DataSet* ds, double* wv)
+{
+    for (uint32_t i = 0; i < ds->length(); i++) {
+        TrainData* td = ds->get_idx_data(i);
+        double p_res =  calc_predict_res(td, wv);
+        printf("%d\t%lf\n", td->label(), p_res);
+    }
+    return 0;
+}
+
+int SgdLogReg::load_data(const char* data_path, DataSet* ds)
+{
+    FILE* file = fopen(data_path, "r");
     if (file == NULL) {
-        printf("can't open file [%s]", _sample_path);
+        printf("can't open file [%s]", data_path);
         return -1;
     }
 
     char input[MAX_INPUT_LENGTH] = {'\0'};
     while (fgets(input, MAX_INPUT_LENGTH, file) != NULL) {
         input[strlen(input) - 1] = '\0';
-        TrainData** td =  _ds->get_one_data();
+        TrainData** td =  ds->get_one_data();
         uint32_t fea_num = 0;
         for (uint32_t i = 0; i < strlen(input); i++) {
             if (input[i] == ':') {
@@ -40,13 +68,13 @@ int SgdLogReg::load_data()
             }
         }
         *td = new TrainData(fea_num + 1);
-        printf("train data has [%u] features \n", fea_num + 1);
+       // printf("train data has [%u] features \n", fea_num + 1);
         char *str = NULL;
         str = strtok(input, SEG_TOKEN);
 
         int tag = atoi(str);
         (*td)->set_label(tag);
-        printf("train data tag is [%d]\n", tag);
+        //printf("train data tag is [%d]\n", tag);
         for (uint32_t j = 0; j < fea_num; j++) {
             str = strtok(NULL, SEG_TOKEN);
             if (str == NULL) {
@@ -91,7 +119,7 @@ int SgdLogReg::get_id_and_value(char* str, uint32_t* idx, double* value)
 
     *idx = static_cast<uint32_t>(atoi(idx_str));
     *value =atof(value_str);
-    printf("\tid[%u]:val[%lf]", *idx, *value);
+    //printf("\tid[%u]:val[%lf]", *idx, *value);
     return 0;
 }
 
@@ -104,7 +132,7 @@ double SgdLogReg::calc_predict_res(TrainData* td, double* wv)
         total += val * wv[idx];
     }
     total = 0 - total;
-    printf("total is [%lf]", total);
+    //printf("total is [%lf]", total);
     return (1/(1 + exp(total)));
 }
 
@@ -117,7 +145,7 @@ int SgdLogReg::sgd_calc_model()
         double step_length = 1 / (cur_iter);
         double cur_error = 0.0f;
         for (uint32_t i = 0; i < _iter_num; i++) {
-            TrainData* td = _ds->get_rand_data();
+            TrainData* td = _train_ds->get_rand_data();
             double p_res = calc_predict_res(td, _wv);
             printf("p_res is [%lf]\n", p_res);
             printf("label is [%d]\n", td->_label);
